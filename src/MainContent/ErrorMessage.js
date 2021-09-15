@@ -1,11 +1,18 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { connect } from 'react-redux';
 import { Form } from 'react-bootstrap';
 
-export default function ErrorMessage() {
-  const errorMsg = useSelector(state => state.get('errorMsg'));
+function ErrorMessage({ errorMsg }) {
   return (
     <div>
       <Form.Text className='text-danger'>{ errorMsg }</Form.Text>
     </div>);
 }
+
+const mapStateToProps = (state) => {
+  return {
+    errorMsg: state.get('errorMsg'),
+  }
+};
+
+export default connect(mapStateToProps)(ErrorMessage);

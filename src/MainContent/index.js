@@ -1,13 +1,10 @@
 import React, { Component } from 'react';
 import { performCommandAction, resetError, resetReport, invalidCommandError } from './../actions'
-import PropTypes from 'prop-types';
 import { validateInput } from '../utils/validation';
-import { checkIfPlaceCommand, checkIfReportCommand, formatPlaceInput } from '../utils/utilities';
+import { checkIfPlaceCommand, formatPlaceInput } from '../utils/utilities';
 import {
-  Card,
   Container,
   Button,
-  FormControl,
   InputGroup,
   Form,
   Row,
@@ -51,10 +48,12 @@ class MainContent extends Component {
       else {
         this.props.commandRobot(input);
       }
-      this.clearTextField();
     }
     else {
       this.props.invalidCommand();
+    }
+    if(!this.props.hasError) {
+      this.clearTextField();
     }
   }
 
