@@ -11,7 +11,7 @@ function ErrorMessage({ errorMsg }) {
 
 const mapStateToProps = (state) => {
   return {
-    errorMsg: state.get('errorMsg'),
+    errorMsg: state.page.get('errorMsg'),
   }
 };
 

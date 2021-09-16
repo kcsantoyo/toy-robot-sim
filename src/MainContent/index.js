@@ -1,6 +1,20 @@
 import React, { Component } from 'react';
-import { performCommandAction, resetError, resetReport, invalidCommandError } from './../actions'
-import { validateInput } from '../utils/validation';
+import {
+  sendCommand,
+  mustPlaceError,
+  resetError,
+  resetReport,
+  cannotMoveFurtherError,
+  invalidCommandError,
+  invalidPlacementError,
+  invalidPlaceFormatError,
+} from './../actions'
+import {
+  validateInput,
+  validateMove,
+  validatePlacement,
+  validatePlaceFormat,
+} from '../utils/validation';
 import { checkIfPlaceCommand, formatPlaceInput } from '../utils/utilities';
 import {
   Container,
@@ -17,17 +31,16 @@ import Report from './Report';
 class MainContent extends Component {
   constructor(props) {
     super(props);
-
     this.state = {
       input: '',
     };
   }
 
   onUpdateTextField = (event) => {
-    if (this.props.hasError) {
+    if (this.props.page.get('hasError')) {
       this.props.resetError();
     }
-    if(this.props.displayReport) {
+    if(this.props.page.get('displayReport')) {
       this.props.resetReport();
     }
     const input = event.target.value.toUpperCase();
@@ -38,32 +51,55 @@ class MainContent extends Component {
 
   onSubmit = () => {
     const input = this.state.input.trim();
+    const x_pos = this.props.robot.get('x_pos');
+    const y_pos = this.props.robot.get('y_pos');
+    const direction = this.props.robot.get('direction');
+
     if(validateInput(input)) {
       if(checkIfPlaceCommand(input)) {
-        const formattedPlaceInput = formatPlaceInput(input);
-        const type = formattedPlaceInput.type
-        const placement = formattedPlaceInput.placement
-        this.props.placeRobot(type, placement);
+        if(validatePlaceFormat(input)) {
+          const formattedPlaceInput = formatPlaceInput(input);
+          const type = formattedPlaceInput.type
+          const placement = formattedPlaceInput.placement
+          if(validatePlacement(placement)) {
+            this.props.placeRobot(type, placement);
+          }
+          else {
+            this.props.invalidPlacementError(placement);
+          }
+        }
+        else {
+          this.props.invalidPlaceFormatError()
+        }
       }
       else {
-        this.props.commandRobot(input);
+        if (this.props.robot.get('placed')) {
+          if(input === 'MOVE') {
+            if(validateMove(x_pos, y_pos, direction)) {
+              this.props.sendCommand(input);
+            }
+            else {
+              this.props.cannotMoveFurther(direction);
+            }
+          }
+          if(input === 'REPORT' || input === 'LEFT' ||
+             input === 'RIGHT') {
+               this.props.sendCommand(input);
+             }
+        }
+        else {
+          this.props.mustPlaceError();
+        }
       }
     }
     else {
-      this.props.invalidCommand();
+      this.props.invalidCommandError(input);
     }
-    if(!this.props.hasError) {
-      this.clearTextField();
-    }
-  }
-
-  clearTextField = () => {
-    document.getElementById('robot-commands').value = '';
+    this.setState({ input: ''});
   }
 
   render() {
-
-      return(
+      return (
         <Container>
           <Row>
             <InfoSection />
@@ -71,15 +107,15 @@ class MainContent extends Component {
           <Row>
             <InputGroup>
               <Form.Control
-              id="robot-commands"
-              isInvalid={this.props.hasError}
+              id="command-input"
+              isInvalid={this.props.page.get('hasError')}
               placeholder="Enter a command"
-              value={this.state.value}
+              value={this.state.input}
               onChange={this.onUpdateTextField}
               />
-              <Button onClick={this.onSubmit}>Submit</Button>
+              <Button id="submit-button" onClick={this.onSubmit}>Submit</Button>
             </InputGroup>
-          { this.props.hasError ? <ErrorMessage /> : <div/> }
+          { this.props.page.get('hasError') ? <ErrorMessage /> : <div/> }
           </Row>
           <Row>
             <Report />
@@ -91,18 +127,23 @@ class MainContent extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    hasError: state.get('hasError'),
-    displayReport: state.get('displayReport'),
+    robot: state.robot,
+    page: state.page,
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    placeRobot: (type, placement) => dispatch(performCommandAction(type, placement)),
-    commandRobot: (type) => dispatch(performCommandAction(type)),
+    placeRobot: (type, placement) => dispatch(sendCommand(type, placement)),
+    sendCommand: (type) => dispatch(sendCommand(type)),
+    cannotMoveFurther: (direction) => dispatch(cannotMoveFurtherError(direction)),
+    placedError: () => dispatch(mustPlaceError()),
     resetError: () => dispatch(resetError()),
     resetReport: () => dispatch(resetReport()),
-    invalidCommand: () => dispatch(invalidCommandError()),
+    invalidCommandError: (input) => dispatch(invalidCommandError(input)),
+    invalidPlacementError: (placement) => dispatch(invalidPlacementError(placement)),
+    invalidPlaceFormatError: () => dispatch(invalidPlaceFormatError()),
+    mustPlaceError: () => dispatch(mustPlaceError()),
   }
 }
 

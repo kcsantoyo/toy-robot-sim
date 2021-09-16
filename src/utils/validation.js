@@ -1,29 +1,39 @@
 import { tableSize, cardinals, validCommands } from './constants'
-import { checkIfPlaceCommand } from './utilities'
 
-const placeRegExp = new RegExp('PLACE [0-4],[0-4],(NORTH|SOUTH|EAST|WEST)');
+const placeRegExp = new RegExp('PLACE +-?[0-9]+ *, *-?[0-9]+ *, *[a-zA-Z]+');
 
-export function validatePlacement(x_pos, y_pos, direction) {
+export function validatePlacement(placement) {
   return (
-    (x_pos >= tableSize.x.min && x_pos <= tableSize.x.max) &&
-    (y_pos >= tableSize.y.min && y_pos <= tableSize.y.max) &&
-    (cardinals.includes(direction))
+    (placement.x_pos >= tableSize.x.min && placement.x_pos <= tableSize.x.max) &&
+    (placement.y_pos >= tableSize.y.min && placement.y_pos <= tableSize.y.max) &&
+    (cardinals.includes(placement.direction))
   )
 }
 
+export function validatePlaceFormat(input) {
+  return placeRegExp.test(input)
+}
+
 export function validateInput(input) {
-  if(!input) {
+  if(input === '') {
     return false;
-  }
-  if(validCommands.includes(input) || input.includes('PLACE')) {
-    if(checkIfPlaceCommand(input)) {
-      return placeRegExp.test(input);
-    }
-    else {
-      return true;
-    }
   }
   else {
-    return false;
+    return (validCommands.includes(input) || input.includes('PLACE'))
+  }
+}
+
+export function validateMove(x_pos, y_pos, direction) {
+  switch (direction) {
+    case 'NORTH':
+      return (y_pos < tableSize.y.max);
+    case 'SOUTH':
+      return (y_pos > tableSize.y.min);
+    case 'EAST':
+      return (x_pos > tableSize.x.min);
+    case 'WEST':
+      return (x_pos < tableSize.x.max);
+    default:
+      return false;
   }
 }

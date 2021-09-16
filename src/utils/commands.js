@@ -1,51 +1,38 @@
 import { Map } from 'immutable';
-import { validatePlacement } from './validation.js'
-import { tableSize, compass } from './constants.js'
+import { compass } from './constants.js'
 
-export function place(placement) {
+export function getPlacement(placement) {
   const x = placement.x_pos;
   const y = placement.y_pos;
   const f = placement.direction;
-  if(validatePlacement(x, y, f)){
-    return Map({
-      x_pos: x,
-      y_pos: y,
-      direction: f,
-      placed: true,
-    });
-  }
-  else {
-    return Map({
-      errorMsg: `Cannot be placed at ${x}, ${y}, ${f}`,
-    });
-  }
+  return Map({
+    x_pos: x,
+    y_pos: y,
+    direction: f,
+    placed: true,
+  });
 }
 
 export function move(state) {
-  const x = state.get("x_pos");
-  const y = state.get("y_pos");
+  const x_pos = state.get('x_pos');
+  const y_pos = state.get('y_pos');
+  const direction = state.get('direction');
 
-  let movementErrorMsg = `Cannot move further ${state.get("direction")}.`
-
-  switch (state.get("direction")) {
+  switch (direction) {
     case 'NORTH':
-      return Map(
-        y < tableSize.y.max ? { y_pos: y + 1 } : { hasError: true, errorMsg: movementErrorMsg }
-      );
+      return Map({ y_pos: y_pos + 1 });
     case 'SOUTH':
-      return Map(
-        y > tableSize.y.min ? { y_pos: y - 1 } : { hasError: true, errorMsg: movementErrorMsg }
-      );
+      return Map({ y_pos: y_pos - 1 });
     case 'EAST':
-      return Map(
-        x < tableSize.x.max ? { x_pos: x + 1 } : { hasError: true, errorMsg: movementErrorMsg }
-      );
+      return Map({ x_pos: x_pos + 1 });
     case 'WEST':
-      return Map(
-        x > tableSize.x.min ? { x_pos: x - 1 } : { hasError: true, errorMsg: movementErrorMsg }
-      );
+      return Map({ x_pos: x_pos - 1 });
     default:
-      return state;
+      return Map({
+        x_pos: x_pos,
+        y_pos: y_pos,
+        direction: direction,
+      });
   }
 }
 
