@@ -15,7 +15,6 @@ export default function robotReducer(state = initState, action){
       let placementMap = getPlacement(action.placement);
       return state.merge(placementMap);
     case 'MOVE':
-      console.log(state);
       return state.merge(
         move(state)
       );
